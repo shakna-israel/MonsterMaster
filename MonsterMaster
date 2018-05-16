@@ -59,7 +59,14 @@ $(getmonster) '' 4 \
 playerMonster0=$(cat "$tmp")
 unhatched='t'
 
-dialog --msgbox "Mom: Wow, $playerName! Good choice!" 10 25
+if [ -z "$playerMonster0" ]; then
+  dialog --msgbox "Mom: You forgot, $playerName?" 10 25
+  dialog --msgbox 'Mom: That is okay. I did not.' 10 25
+  playerMonster0=$(getmonster)
+else
+  dialog --msgbox "Mom: Wow, $playerName! Good choice!" 10 25
+fi
+
 dialog --msgbox "Mom: You should come downstairs soon, you don't want to miss it hatching." 10 25
 dialog --msgbox "(Mom leaves the room.)" 10 25
 
