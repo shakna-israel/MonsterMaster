@@ -103,6 +103,7 @@ homeBedroom() {
       room='homeLounge'
       ;;
     'Quit')
+      lroom="$room"
       room='quit'
       ;;
   esac
@@ -140,6 +141,7 @@ homeLounge() {
         room='hometownSquare'
         ;;
       'Quit')
+        lroom="$room"
         room='quit'
         ;;
     esac
@@ -211,6 +213,7 @@ hometownSquare() {
         room='outsideCastle'
         ;;
       'Quit')
+        lroom="$room"
         room='quit'
         ;;
     esac
@@ -219,6 +222,7 @@ hometownSquare() {
 
 # check for a savefile
 if [ -f '.save' ]; then
+  # TODO BUG: cannot find file... Despite the test above.
   . '.save'
 else
   intro
@@ -236,5 +240,12 @@ echo "playerAttack='$playerAttack'" >> '.save'
 echo "playerDefend='$playerDefend'" >> '.save'
 echo "playerLuck='$playerLuck'" >> '.save'
 echo "playerMonster0='$playerMonster0'" >> '.save'
+echo "playerMonster1='$playerMonster1'" >> '.save'
+echo "playerMonster2='$playerMonster2'" >> '.save'
+echo "playerMonster3='$playerMonster3'" >> '.save'
+echo "rival='$rival'" >> '.save'
+echo "rivalMonster='$rivalMonster'" >> '.save'
+echo "unhatched='$unhatched'" >> '.save'
+echo "room='$lroom'" >> '.save'
 
 rm "$tmp"
