@@ -22,9 +22,12 @@ dec() {
 }
 
 getmonster() {
+  while [ -z "$monster" ];
+  do
   num=$(echo $RANDOM % $(wc -l .monsters | awk '{print $1}') | bc)
   num=$(dec "$num")
   monster=$(head -n "$num" .monsters| tail -n1)
+  done
   echo "$monster"
 }
 
@@ -44,28 +47,25 @@ rival=$(cat "$tmp")
 
 dialog --pause 'Your adventure is about to begin...' 10 25 5
 
-dialog --msgbox "Mom: Hello, $playerName!    Today's the big day!" 10 25
+dialog --msgbox "Mom: Hello, $playerName! Today's the big day!" 10 25
 dialog --msgbox "Mom: Today you become a Master, $playerName!" 10 25
 dialog --msgbox "Mom: Your first monster should be hatching any moment now, $playerName!" 10 25
 dialog --msgbox "Mom: What kind did you end up getting anyway, $playerName?" 10 25
 
+while [ -z "$playerMonster0" ];
+do
 dialog --radiolist 'Oh, I got a...' 10 25 20 \
 $(getmonster) '' 1 \
 $(getmonster) '' 2 \
 $(getmonster) '' 3 \
 $(getmonster) '' 4 \
 2> "$tmp"
-
 playerMonster0=$(cat "$tmp")
+done
+
 unhatched='t'
 
-if [ -z "$playerMonster0" ]; then
-  dialog --msgbox "Mom: You forgot, $playerName?" 10 25
-  dialog --msgbox 'Mom: That is okay. I did not.' 10 25
-  playerMonster0=$(getmonster)
-else
-  dialog --msgbox "Mom: Wow, $playerName! Good choice!" 10 25
-fi
+dialog --msgbox "Mom: Wow, $playerName! Good choice!" 10 25
 
 dialog --msgbox "Mom: You should come downstairs soon, you don't want to miss it hatching." 10 25
 dialog --msgbox "(Mom leaves the room.)" 10 25
