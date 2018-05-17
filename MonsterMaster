@@ -36,11 +36,13 @@ getmonsterSound() {
   echo "$sound"
 }
 
-rivalMonster=$(getmonster)
-
 # store for dialog
 tmp=$(mktemp)
 exec 3>"$tmp" # keep file descriptor open
+
+
+intro() {
+rivalMonster=$(getmonster)
 
 #get player name
 dialog --inputbox 'What is your name?' 10 25 'San' 2> "$tmp"
@@ -76,6 +78,7 @@ dialog --msgbox "Mom: You should come downstairs soon, you don't want to miss it
 dialog --msgbox "(Mom leaves the room.)" 10 25
 
 room='homeBedroom'
+}
 
 homeBedroom() {
   dialog --radiolist "$playerName's bedroom:" 10 25 20 \
@@ -112,6 +115,7 @@ homeLounge() {
     dialog --msgbox 'It shakes.' 10 25
     sound=$(getmonsterSound "$playerMonster0")
     dialog --msgbox "With a low $sound a $playerMonster0 tumbles onto the ground." 10 25
+    playerAttack='1'
   else
     dialog --radiolist "$playerName's lounge room:" 10 25 20 \
     'Mom' '' 1 \
@@ -132,6 +136,7 @@ homeLounge() {
         dialog --msgbox 'The president is on TV, raving about some new dragon sanctuary. He would, he caught a dragon.' 10 25
         ;;
       'Door to outside')
+        dialog --msgbox "The $playerMonster0 follows you." 10 25
         room='hometownSquare'
         ;;
       'Quit')
@@ -141,10 +146,95 @@ homeLounge() {
   fi
 }
 
+fight() {
+  soundA=$(getmonsterSound "$1")
+  soundB=$(getmonsterSound "$2")
+  dialog --msgbox "The $1 makes a threatening $soundA" 10 25
+  dialog --msgbox "The $2 responds with a $soundB" 10 25
+  while [ -z "$win" ];
+  do
+    attack=$(echo "$playerAttack + $playerLuck" | bc)
+    defend=$(echo "$playerDefend + $playerLuck" | bc)
+    attack2=$(echo "$attack / 2" | bc)
+    defend2=$(echo "$defend / 2" | bc)
+    dialog --msgbox "The $1 attacks: $attack" 10 25
+    dialog --msgbox "The $2 defends: $defend2" 10 25
+    if [ "$attack" -gt "$defend2" ]; then
+      dialog --msgbox "The attack succeeds!" 10 25
+      playerLuck=$(inc "$playerLuck")
+    else
+      dialog --msgbox "The attack fails!" 10 25
+    fi
+
+    dialog --msgbox "The $2 attacks: $attack2" 10 25
+    dialog --msgbox "The $1 defends: $defend" 10 25
+    if [ "$attack2" -gt "$defend" ]; then
+      dialog --msgbox "The attack succeeds!" 10 25
+    else
+      dialog --msgbox "The attack fails!" 10 25
+      playerLuck=$(inc "$playerLuck")
+    fi
+    if [ "$playerLuck" -eq 10 ]; then
+      win='t'
+    fi
+  done
+}
+
+hometownSquare() {
+  if [ -z "$visitedHometownSquare" ]; then
+    dialog --msgbox "$rival: Hey! Eggface!" 10 25
+    dialog --msgbox "$rival appears to have been waiting for you. With his $rivalMonster!" 10 25
+    dialog --msgbox "$rival: I can beat you! Hand over your $playerMonster0 or fight!" 10 25
+    fight "$playerMonster0" "$rivalMonster"
+    dialog --msgbox "$rival: No fair! You cheated!" 10 25
+    dialog --msgbox "($rival runs away)" 10 25
+    playerAttack=$(inc "$playerAttack")
+    playerLuck='0'
+    visitedHometownSquare='t'
+  else
+    dialog --radiolist "Hometown: Square:" 10 25 20 \
+    'Music stage' '' 1 \
+    'Balloon clown' '' 2 \
+    'Path to the castle' '' 3 \
+    'Quit' '' 4 \
+    2>"$tmp"
+    case $(cat "$tmp") in
+      'Music stage')
+        sound=$(getmonsterSound "$playerMonster0")
+        dialog --msgbox "Your $playerMonster0 seems to like the music. It taps its paw, $sound to itself." 10 25
+        ;;
+      'Balloon clown')
+        dialog --msgbox "The clown hands you a balloon in the shape of a $playerMonster0"
+        ;;
+      'Path to the castle')
+        dialog --msgbox 'It is a long winding path, uphill.' 10 25
+        room='outsideCastle'
+        ;;
+      'Quit')
+        room='quit'
+        ;;
+    esac
+  fi
+}
+
+# check for a savefile
+if [ -f '.save' ]; then
+  . '.save'
+else
+  intro
+fi
+
 # tick the game
 while [ "$room" != 'quit' ];
 do
   $room
 done
+
+# save
+echo "playerName='$playerName'" > '.save'
+echo "playerAttack='$playerAttack'" >> '.save'
+echo "playerDefend='$playerDefend'" >> '.save'
+echo "playerLuck='$playerLuck'" >> '.save'
+echo "playerMonster0='$playerMonster0'" >> '.save'
 
 rm "$tmp"
