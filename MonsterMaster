@@ -26,9 +26,14 @@ getmonster() {
   do
   num=$(echo $RANDOM % $(wc -l .monsters | awk '{print $1}') | bc)
   num=$(dec "$num")
-  monster=$(head -n "$num" .monsters| tail -n1)
+  monster=$(head -n "$num" .monsters| tail -n1 | awk '{print $1}')
   done
   echo "$monster"
+}
+
+getmonsterSound() {
+  sound=$(grep "$1 " .monsters | awk '{print $2}')
+  echo "$sound"
 }
 
 rivalMonster=$(getmonster)
@@ -105,7 +110,8 @@ homeLounge() {
     unhatched='f'
     dialog --msgbox 'An egg lies in the middle of the room.' 10 25
     dialog --msgbox 'It shakes.' 10 25
-    dialog --msgbox "With a low growl a $playerMonster0 tumbles onto the ground." 10 25
+    sound=$(getmonsterSound "$playerMonster0")
+    dialog --msgbox "With a low $sound a $playerMonster0 tumbles onto the ground." 10 25
   else
     dialog --radiolist "$playerName's lounge room:" 10 25 20 \
     'Mom' '' 1 \
@@ -119,7 +125,8 @@ homeLounge() {
         dialog --msgbox "Mom: You should be getting along to the graduation ceremony, $playerName. At the castle." 10 25
         ;;
       "$playerMonster0")
-        dialog --msgbox "The $playerMonster0 looks at you with wide eyes, and lets out a cute little sound." 10 25
+        sound=$(getmonsterSound "$playerMonster0")
+        dialog --msgbox "The $playerMonster0 looks at you with wide eyes, and lets out a cute little $sound." 10 25
         ;;
       'A TV')
         dialog --msgbox 'The president is on TV, raving about some new dragon sanctuary. He would, he caught a dragon.' 10 25
